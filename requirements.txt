@@ -8,3 +8,4 @@ WordCloud
 SMOTE
 Pipeline
 imblearn
+OpenCageGeocode
