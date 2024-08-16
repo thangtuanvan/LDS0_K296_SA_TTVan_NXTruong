@@ -5,10 +5,3 @@ matplotlib
 seaborn
 scikit-learn
 WordCloud
-LogisticRegression
-accuracy_score
-classification_report
-confusion_matrix
-SMOTE
-Pipeline
-OpenCageGeocode
