@@ -5,13 +5,5 @@ matplotlib
 seaborn
 scikit-learn
 WordCloud
-train_test_split
-TfidfVectorizer
-MultinomialNB
-LogisticRegression
-accuracy_score
-classification_report
-confusion_matrix
 SMOTE
-Pipeline
 OpenCageGeocode
