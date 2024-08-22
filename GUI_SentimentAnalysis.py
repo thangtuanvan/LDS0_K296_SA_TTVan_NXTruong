@@ -5,6 +5,8 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from wordcloud import WordCloud
 import re
+from underthesea import word_tokenize
+import string
 
 from sklearn.model_selection import train_test_split
 from sklearn.feature_extraction.text import TfidfVectorizer
@@ -49,6 +51,18 @@ def clean_review_date(date):
 def extract_stay_duration(stay_details):
     match = re.search(r'(\d+)', stay_details)
     return int(match.group(1)) if match else 0
+
+# Hàm xử lý văn bản
+def preprocess_text(text):
+    # Chuyển đổi thành chữ thường
+    text = text.lower()
+    # Loại bỏ dấu câu và ký tự đặc biệt
+    text = re.sub(f"[{string.punctuation}]", "", text)
+    # Loại bỏ các khoảng trắng thừa
+    text = re.sub(r"\s+", " ", text).strip()
+    # Tách từ
+    text = word_tokenize(text, format="text")
+    return text
 
 # load dữ liệu
 comments_data = pd.read_csv('data_hotel_comments_clean.csv')
@@ -228,7 +242,9 @@ if choice == 'Business Objective':
             plt.ylabel('Điểm số trung bình')
             plt.xticks(rotation=45, ha='right')
             # plt.show()
-            st.pyplot(fig.figure)
+            # st.pyplot(fig.figure)
+            st.pyplot(plt.gcf())
+            plt.clf()
 
             ##############################################################
             st.subheader("Phân tích điểm số trung bình theo nhóm khách")
@@ -246,7 +262,9 @@ if choice == 'Business Objective':
             plt.ylabel('Điểm số trung bình')
             plt.xticks(rotation=45, ha='right')
             # plt.show()
-            st.pyplot(fig.figure)
+            # st.pyplot(fig.figure)
+            st.pyplot(plt.gcf())
+            plt.clf()
 
             ##############################################################
             st.subheader("Phân bố nhóm khách")
@@ -262,7 +280,9 @@ if choice == 'Business Objective':
             plt.title('Phân bố nhóm khách')
             plt.ylabel('')
             # plt.show()
-            st.pyplot(fig.figure)
+            # st.pyplot(fig.figure)
+            st.pyplot(plt.gcf())
+            plt.clf()
 
             ##############################################################
             st.subheader("Phân bố theo thời gian lưu trú")
@@ -278,7 +298,9 @@ if choice == 'Business Objective':
             plt.xlabel('Stay Duration')
             plt.ylabel('Average Score')
             # plt.show()
-            st.pyplot(fig.figure)
+            # st.pyplot(fig.figure)
+            st.pyplot(plt.gcf())
+            plt.clf()
 
             ##############################################################
             st.subheader("Phân bố theo quốc tịch")
@@ -301,7 +323,9 @@ if choice == 'Business Objective':
             plt.ylim(0, nationality_distribution.max() + 0.1)
             plt.xticks(rotation=45, ha='right')     
 
-            st.pyplot(fig.figure)
+            # st.pyplot(fig.figure)
+            st.pyplot(plt.gcf())
+            plt.clf()
 
             ##############################################################
             st.subheader("Phân tích điểm số trung bình theo quốc tịch")
@@ -318,7 +342,9 @@ if choice == 'Business Objective':
             plt.ylabel('Điểm số trung bình')
             plt.xticks(rotation=45, ha='right')
             # plt.show()
-            st.pyplot(fig.figure)
+            # st.pyplot(fig.figure)
+            st.pyplot(plt.gcf())
+            plt.clf()
 
             ##############################################################
             st.subheader("Phân tích xu hướng điểm số theo thời gian")
@@ -337,7 +363,9 @@ if choice == 'Business Objective':
             plt.xticks(rotation=45, ha='right')
             plt.tight_layout()
             # plt.show()
-            st.pyplot(fig.figure)
+            # st.pyplot(fig.figure)
+            st.pyplot(plt.gcf())
+            plt.clf()
 
             ##############################################################
             st.subheader("Phân tích điểm số theo mùa")
@@ -355,7 +383,9 @@ if choice == 'Business Objective':
             plt.ylabel('Điểm số trung bình')
             plt.xticks(rotation=45, ha='right')
             # plt.show()
-            st.pyplot(fig.figure)
+            # st.pyplot(fig.figure)
+            st.pyplot(plt.gcf())
+            plt.clf()
 
             # ##############################################################
             # st.subheader("Phân tích phản hồi từ nhóm khách")
@@ -475,44 +505,55 @@ elif choice == 'Build Project':
 elif choice == 'New Prediction':
     st.subheader("Select data")
     
-    flag = False
-    lines = None
-    type = st.radio("Upload data or Input data?", options=("Upload", "Input"))
-    if type=="Upload":
-        # Upload file
-        uploaded_file_1 = st.file_uploader("Choose a file", type=['txt', 'csv'])
-        if uploaded_file_1 is not None:
-            lines = pd.read_csv(uploaded_file_1, header=None)
-            st.dataframe(lines)            
-            lines = lines[0]     
-            flag = True                          
-    if type=="Input":        
-        content = st.text_area(label="Input your content:")
-        if content!="":
-            lines = np.array([content])
-            flag = True
-
-    #6. Load models 
-    # Đọc model
-    # import pickle
-    pkl_filename = "sentiment_model.pkl"  
+    # Load các mô hình đã lưu
+    pkl_filename = "sentiment_model.pkl"
     with open(pkl_filename, 'rb') as file:  
         lr_sentiment_model = pickle.load(file)
 
-    # doc model count len
-    pkl_tfidf = "tfidf_model.pkl"  
+    pkl_tfidf = "tfidf_model.pkl"
     with open(pkl_tfidf, 'rb') as file:  
         tfidf_model = pickle.load(file)
 
+    flag = False
+    lines = None
+    type = st.radio("Upload data or Input data?", options=("Upload", "Input"))
+    if type == "Upload":
+        uploaded_file_1 = st.file_uploader("Choose a file", type=['txt', 'csv'])
+        if uploaded_file_1 is not None:
+            lines = pd.read_csv(uploaded_file_1, header=None)
+            if lines.shape[1] == 1:  # Nếu chỉ có một cột
+                lines.columns = ['Input Data']  # Đặt tên cột cho dữ liệu
+            else:
+                # Gộp các cột thành một, bỏ qua các giá trị NaN
+                lines[0] = lines.apply(lambda row: ' '.join(row.dropna().values.astype(str)), axis=1)
+                lines = lines[[0]]  # Chỉ giữ lại cột đã gộp
+                lines.columns = ['Input Data']  # Đặt tên cột là 'Input Data'
+            lines = lines.dropna()  # Loại bỏ các giá trị NaN nếu có
+            st.write(lines)  # Hiển thị bảng dữ liệu đã upload
+            flag = True                          
+    if type == "Input":        
+        content = st.text_area(label="Input your content:")
+        if content != "":
+            lines = pd.DataFrame([content], columns=['Input Data'])
+            flag = True
+
     if flag:
         st.write("Content:")
-        if len(lines)>0:
-            st.code(lines)        
+        if len(lines) > 0:
+            # Xử lý văn bản đầu vào
+            processed_lines = lines['Input Data'].apply(preprocess_text)
 
-            x_new = tfidf_model.transform(lines)         
+            # Chuyển đổi văn bản đã xử lý thành TF-IDF
+            x_new = tfidf_model.transform(processed_lines)
 
-            y_pred_new = lr_sentiment_model.predict(x_new)       
-            st.code("New predictions (0: Positive, 1: Neutral, 2: Negative): " + str(y_pred_new)) 
+            # Dự đoán
+            y_pred_new = lr_sentiment_model.predict(x_new)
+            
+            # Thêm cột kết quả dự đoán vào dataframe
+            lines['Prediction'] = y_pred_new
+
+            # Hiển thị bảng dữ liệu kèm kết quả dự đoán
+            st.write(lines)
 
 
 
