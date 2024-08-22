@@ -6,4 +6,6 @@ seaborn
 scikit-learn
 WordCloud
 SMOTE
+imblearn
+opencage
 underthesea
